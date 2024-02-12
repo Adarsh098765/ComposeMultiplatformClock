@@ -3,6 +3,7 @@ package composables
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -29,24 +31,20 @@ fun DigitalClock() {
         mutableStateOf("")
     }
 
-    DisposableEffect(key1 = 0) {
+    LaunchedEffect(key1 = Unit) {
+        launch(Dispatchers.IO) {
+            while (isActive) {
+                val currentMoment: Instant = Clock.System.now()
+                val calendar = currentMoment.toLocalDateTime(TimeZone.currentSystemDefault())
 
-        val job =
-            CoroutineScope(Dispatchers.IO).launch {
-                while (true) {
-                    val currentMoment: Instant = Clock.System.now()
-                    val calendar = currentMoment.toLocalDateTime(TimeZone.currentSystemDefault())
+                time = calendar.time.toAnalog()
 
-                    time = calendar.time.toAnalog()
-
-                    delay(1000)
-                }
+                delay(1000)
             }
-        onDispose {
-            job.cancel()
         }
 
     }
+
 
     Text(
         text = time,
